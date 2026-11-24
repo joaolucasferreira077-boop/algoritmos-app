@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratório de Algoritmos Clássicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e9eef5;
+    --panel: #ffffff;
+    --ink: #13233f;
+    --muted: #5b6b86;
+    --line: #c9d3e3;
+    --accent: #e4572e;
+    --accent-ink: #ffffff;
+    --ok: #1f7a5a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1a2e;
+      --panel: #16253f;
+      --ink: #eaf0fb;
+      --muted: #9fb0cc;
+      --line: #2a3d5f;
+      --accent: #ff7a50;
+      --accent-ink: #1a0f0a;
+      --ok: #5fd1a4;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Space Grotesk", system-ui, sans-serif; line-height: 1.5;
+  }
+  header { padding: 40px 24px 8px; max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); max-width: 52ch; }
+  main {
+    max-width: 1040px; margin: 24px auto 48px; padding: 0 24px;
+    display: grid; grid-template-columns: 260px 1fr; gap: 24px;
+  }
+  nav { display: flex; flex-direction: column; gap: 8px; }
+  nav button {
+    text-align: left; padding: 12px 14px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink); border-radius: 6px;
+    font: inherit; cursor: pointer;
+  }
+  nav button small { display: block; color: var(--muted); font-size: .8rem; }
+  nav button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+  nav button:focus-visible, .go:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  section {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 24px; min-width: 0;
+  }
+  h2 { margin: 0 0 4px; font-size: 1.5rem; }
+  .desc { color: var(--muted); margin: 0 0 20px; }
+  form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 20px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--muted); }
+  input {
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); color: var(--ink); font: 500 1rem "IBM Plex Mono", monospace; min-width: 140px;
+  }
+  .go {
+    padding: 11px 20px; border: 0; border-radius: 6px; background: var(--accent);
+    color: var(--accent-ink); font: 700 1rem "Space Grotesk", sans-serif; cursor: pointer;
+  }
+  .result { padding: 14px 16px; border-left: 4px solid var(--ok); background: var(--bg); border-radius: 0 6px 6px 0; margin-bottom: 16px; overflow-wrap: anywhere; }
+  .result strong { font-family: "IBM Plex Mono", monospace; }
+  .error { border-left-color: var(--accent); }
+  ol { margin: 0; padding-left: 1.6rem; font-family: "IBM Plex Mono", monospace; font-size: .9rem; max-height: 340px; overflow: auto; }
+  ol li { padding: 3px 0; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding-bottom: 32px; }
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; }
+    nav { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+    nav button { min-width: 150px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Algoritmos clássicos, passo a passo</h1>
+  <p>Escolha um algoritmo, digite seus próprios valores e veja como ele chega ao resultado.</p>
+</header>
+<main>
+  <nav id="menu" aria-label="Algoritmos"></nav>
+  <section aria-live="polite">
+    <h2 id="titulo"></h2>
+    <p class="desc" id="descricao"></p>
+    <form id="form"></form>
+    <div id="saida"><p class="empty">Informe os valores e clique em Executar.</p></div>
+  </section>
+</main>
+<footer>Aplicação Flask publicada na nuvem · Atividade de Desenvolvimento de Software em Nuvem</footer>
+
+<script>
+const ALGOS = [
+  { id: "fibonacci", nome: "Fibonacci", sub: "Sequência de somas",
+    desc: "Cada termo é a soma dos dois anteriores, começando em 0 e 1.",
+    campos: [{ k: "n", rot: "Quantos termos (1–60)", v: "10", tipo: "number" }] },
+  { id: "fatorial", nome: "Fatorial", sub: "Produto de 1 até n",
+    desc: "n! é o produto de todos os inteiros de 1 até n.",
+    campos: [{ k: "n", rot: "Valor de n (0–50)", v: "6", tipo: "number" }] },
+  { id: "mdc", nome: "MDC (Euclides)", sub: "Maior divisor comum",
+    desc: "Divide repetidamente até o resto chegar a zero. O último divisor é o MDC.",
+    campos: [{ k: "a", rot: "Primeiro número", v: "252", tipo: "number" },
+             { k: "b", rot: "Segundo número", v: "105", tipo: "number" }] },
+  { id: "crivo", nome: "Crivo de Eratóstenes", sub: "Números primos",
+    desc: "Risca os múltiplos de cada primo. O que sobrar é primo.",
+    campos: [{ k: "n", rot: "Até (2–500)", v: "50", tipo: "number" }] },
+  { id: "busca", nome: "Busca binária", sub: "Procura em lista ordenada",
+    desc: "Compara com o elemento do meio e descarta metade da lista a cada passo.",
+    campos: [{ k: "lista", rot: "Lista (separada por vírgula)", v: "7, 2, 9, 4, 15, 11, 3", tipo: "text" },
+             { k: "alvo", rot: "Valor procurado", v: "11", tipo: "number" }] },
+  { id: "bubble", nome: "Bubble sort", sub: "Ordenação por trocas",
+    desc: "Troca vizinhos fora de ordem. A cada passada, o maior valor vai para o fim.",
+    campos: [{ k: "lista", rot: "Lista (separada por vírgula)", v: "5, 1, 4, 2, 8", tipo: "text" }] },
+];
+
+const menu = document.getElementById("menu");
+const form = document.getElementById("form");
+const saida = document.getElementById("saida");
+let atual = ALGOS[0];
+
+function escolher(a) {
+  atual = a;
+  document.getElementById("titulo").textContent = a.nome;
+  document.getElementById("descricao").textContent = a.desc;
+  form.innerHTML = "";
+  a.campos.forEach(c => {
+    const l = document.createElement("label");
+    l.textContent = c.rot;
+    const i = document.createElement("input");
+    i.name = c.k; i.type = c.tipo; i.value = c.v; i.required = true;
+    l.appendChild(i);
+    form.appendChild(l);
+  });
+  const b = document.createElement("button");
+  b.className = "go"; b.type = "submit"; b.textContent = "Executar";
+  form.appendChild(b);
+  saida.innerHTML = '<p class="empty">Informe os valores e clique em Executar.</p>';
+  [...menu.children].forEach((el, idx) => el.setAttribute("aria-pressed", ALGOS[idx] === a));
+}
+
+ALGOS.forEach(a => {
+  const b = document.createElement("button");
+  b.innerHTML = `${a.nome}<small>${a.sub}</small>`;
+  b.onclick = () => escolher(a);
+  menu.appendChild(b);
+});
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const params = new URLSearchParams(new FormData(form));
+  saida.innerHTML = '<p class="empty">Calculando…</p>';
+  try {
+    const r = await fetch(`/api/${atual.id}?${params}`);
+    const d = await r.json();
+    if (!r.ok) { saida.innerHTML = `<div class="result error"></div>`; saida.firstChild.textContent = d.erro; return; }
+    const res = Array.isArray(d.resultado) ? d.resultado.join(", ") : d.resultado;
+    saida.innerHTML = '<div class="result">Resultado: <strong></strong></div><ol></ol>';
+    saida.querySelector("strong").textContent = res;
+    const ol = saida.querySelector("ol");
+    d.passos.forEach(p => { const li = document.createElement("li"); li.textContent = p; ol.appendChild(li); });
+  } catch {
+    saida.innerHTML = '<div class="result error">Não foi possível falar com o servidor. Tente de novo.</div>';
+  }
+});
+
+escolher(ALGOS[0]);
+</script>
+</body>
+</html>
