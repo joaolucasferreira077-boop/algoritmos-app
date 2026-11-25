@@ -138,5 +138,3 @@ Procfile                 # comando de inicialização no Elastic Beanstalk
 .gitignore
 README.md
 ```
-
-A pasta `templates/` precisa existir com esse nome exato, pois é onde o Flask procura o `index.html`.
